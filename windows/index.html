@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Llama - Assistente de Voz Ollama</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Header -->
+        <header class="app-header">
+            <div class="brand">
+                <i data-lucide="speech" class="brand-icon"></i>
+                <h1>Voice Llama</h1>
+            </div>
+            
+            <div class="header-controls">
+                <div class="control-group">
+                    <label for="model-select"><i data-lucide="brain"></i> Modelo:</label>
+                    <select id="model-select" class="custom-select">
+                        <option value="">A carregar modelos...</option>
+                    </select>
+                </div>
+                <button id="refresh-models-btn" class="icon-btn" title="Recarregar Modelos">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Left Panel: Chat History -->
+            <section class="chat-section">
+                <div class="panel-header">
+                    <h2><i data-lucide="message-square"></i> Transcrição da Conversa</h2>
+                    <button id="clear-chat-btn" class="text-btn">
+                        <i data-lucide="trash-2"></i> Limpar
+                    </button>
+                </div>
+                
+                <div id="chat-history" class="chat-history">
+                    <div class="chat-message assistant welcome-message">
+                        <div class="message-avatar">
+                            <i data-lucide="bot"></i>
+                        </div>
+                        <div class="message-content">
+                            <p>Olá! Sou o <strong>Voice Llama</strong>. Certifique-se de que o seu Ollama está ativo, escolha um modelo e clique no microfone ou pressione a barra de espaço para conversarmos!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area (Fallback for typing) -->
+                <div class="input-area">
+                    <form id="text-input-form" class="input-form">
+                        <input type="text" id="text-input" placeholder="Escreva uma mensagem ou fale..." autocomplete="off">
+                        <button type="submit" id="send-btn" class="action-btn circle-btn" title="Enviar Mensagem">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Panel: Voice Center & Orb -->
+            <section class="voice-section">
+                <!-- Status Bar -->
+                <div class="status-indicator">
+                    <span id="status-dot" class="status-dot idle"></span>
+                    <span id="status-text">Inativo</span>
+                </div>
+
+                <!-- Interactive Orb Container -->
+                <div class="orb-container">
+                    <div id="voice-orb" class="voice-orb idle">
+                        <div class="orb-glow"></div>
+                        <div class="orb-core">
+                            <i id="orb-icon" data-lucide="mic"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="orb-hints">
+                        <p id="mic-instruction">Clique no Orb ou prima [Espaço] para falar</p>
+                    </div>
+                </div>
+
+                <!-- Controls Panel -->
+                <div class="controls-panel">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" data-tab="voice-settings">Voz</button>
+                        <button class="tab-btn" data-tab="ollama-settings">Ollama</button>
+                    </div>
+
+                    <div class="tab-content active" id="voice-settings">
+                        <!-- TTS Voice selection -->
+                        <div class="setting-row">
+                            <label for="voice-select"><i data-lucide="volume-2"></i> Voz de Saída:</label>
+                            <select id="voice-select" class="custom-select"></select>
+                        </div>
+
+                        <!-- Recognition Language -->
+                        <div class="setting-row">
+                            <label for="lang-select"><i data-lucide="languages"></i> Idioma (Entrada):</label>
+                            <select id="lang-select" class="custom-select">
+                                <option value="pt-PT">Português (Portugal)</option>
+                                <option value="pt-BR">Português (Brasil)</option>
+                                <option value="en-US">Inglês (EUA)</option>
+                                <option value="es-ES">Espanhol (Espanha)</option>
+                                <option value="fr-FR">Francês (França)</option>
+                            </select>
+                        </div>
+
+                        <!-- Speech Rate -->
+                        <div class="setting-row">
+                            <div class="slider-label">
+                                <span><i data-lucide="gauge"></i> Velocidade:</span>
+                                <span id="rate-val">1.0x</span>
+                            </div>
+                            <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="1.0" class="custom-slider">
+                        </div>
+
+                        <!-- Speech Pitch -->
+                        <div class="setting-row">
+                            <div class="slider-label">
+                                <span><i data-lucide="music"></i> Tom:</span>
+                                <span id="pitch-val">1.0</span>
+                            </div>
+                            <input type="range" id="speech-pitch" min="0.5" max="2" step="0.1" value="1.0" class="custom-slider">
+                        </div>
+
+                        <!-- Toggles -->
+                        <div class="setting-row checkbox-row">
+                            <label class="switch-container">
+                                <input type="checkbox" id="auto-speak-toggle" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span>Falar respostas automaticamente</span>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="ollama-settings">
+                        <!-- Ollama Server URL -->
+                        <div class="setting-row">
+                            <label for="ollama-url"><i data-lucide="link"></i> Endereço Ollama:</label>
+                            <input type="text" id="ollama-url" class="custom-input" value="http://127.0.0.1:11434">
+                        </div>
+
+                        <!-- System Prompt -->
+                        <div class="setting-row">
+                            <label for="system-prompt"><i data-lucide="sliders"></i> Instruções do Sistema:</label>
+                            <textarea id="system-prompt" class="custom-textarea" rows="4" placeholder="Instruções para o comportamento do modelo..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="playback-controls">
+                    <button id="stop-speech-btn" class="action-btn text-icon-btn" disabled>
+                        <i data-lucide="square"></i> Parar de Falar
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JS Link -->
+    <script src="app.js"></script>
+</body>
+</html>
